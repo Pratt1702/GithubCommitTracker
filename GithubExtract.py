@@ -6,52 +6,51 @@ import re
 
 def get_total_contributions(username):
     """
-    Scrapes the user's profile to find all contribution years,
-    then sums the contributions from each year to get the lifetime total.
+    Checks each year from 2024 to the current year directly.
+    Returns both the total for 2026 and the lifetime total (sum of 2024 onwards).
     """
     headers = {
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36'
     }
     
+    results = {
+        'total_2026': 0,
+        'total_lifetime': 0
+    }
+    
+    # We check from 2024 to the current year
+    current_year = datetime.now().year
+    years_to_check = range(2024, current_year + 1)
+    
+    print(f"  Checking contributions for {username} from 2024 to {current_year}...")
+    
     try:
-        # 1. Get the main profile page to find all available years
-        profile_url = f"https://github.com/{username}"
-        response = requests.get(profile_url, headers=headers, timeout=15)
-        if response.status_code != 200:
-            print(f"Error fetching profile for {username}: {response.status_code}")
-            return None
-            
-        content = response.text
-        # Find all year links like /username?tab=overview&from=2023-12-01&to=2023-12-31
-        # The user provided HTML shows links with ids like "year-link-2026"
-        years = re.findall(r'id="year-link-(\d+)"', content)
-        
-        if not years:
-            # Fallback: if no year sidebar, just try the current page's count
-            years = [str(datetime.now().year)]
-            
-        total_lifetime = 0
-        print(f"  Found years for {username}: {', '.join(years)}")
-        
-        for year in years:
-            # GitHub has a specific endpoint for the contribution graph fragment
-            # This is faster and cleaner than fetching the whole profile again
+        for year_int in years_to_check:
+            year = str(year_int)
             contrib_url = f"https://github.com/users/{username}/contributions?from={year}-01-01&to={year}-12-31"
             res = requests.get(contrib_url, headers=headers, timeout=10)
-            if res.status_code == 200:
-                # Look for "274 contributions in 2026"
-                match = re.search(r'([\d,]+)\s+contributions\s+in\s+' + year, res.text, re.IGNORECASE)
-                if match:
-                    count = int(match.group(1).replace(',', ''))
-                    total_lifetime += count
-                else:
-                    # Sometimes the wording is slightly different if it's the current year/range
-                    match = re.search(r'([\d,]+)\s+contributions\s+in\s+the\s+last\s+year', res.text, re.IGNORECASE)
-                    if match:
-                        count = int(match.group(1).replace(',', ''))
-                        total_lifetime += count
             
-        return total_lifetime
+            if res.status_code == 200:
+                # Robust regex for "X contributions in 202X" or "X contributions in the last year"
+                # Matches "1,098\n      contributions\n        in 2025" as well
+                pattern = rf'([\d,]+)\s+contributions\s+in\s+({year}|the\s+last\s+year)'
+                count_match = re.search(pattern, res.text, re.IGNORECASE | re.DOTALL)
+                
+                if count_match:
+                    count = int(count_match.group(1).replace(',', ''))
+                    print(f"    {year}: {count} contributions")
+                    
+                    if year == '2026':
+                        results['total_2026'] = count
+                    
+                    results['total_lifetime'] += count
+                else:
+                    # If we don't find the count, it might be 0 for that year
+                    print(f"    {year}: 0 (or not found)")
+            else:
+                print(f"    {year}: Error {res.status_code}")
+            
+        return results
 
     except Exception as e:
         print(f"Exception scraping contributions for {username}: {e}")
@@ -59,7 +58,6 @@ def get_total_contributions(username):
 
 def extract_username(url):
     """Extracts GitHub username from a URL."""
-    # Handles https://github.com/username or github.com/username/ etc.
     parts = url.rstrip('/').split('/')
     return parts[-1]
 
@@ -75,11 +73,9 @@ def process_extraction():
     # Read input data
     users_to_track = []
     with open(input_file, mode='r', encoding='utf-8') as f:
-        # We strip header names to avoid issues with hidden spaces
         reader = csv.DictReader(f)
         reader.fieldnames = [name.strip() for name in reader.fieldnames]
         for row in reader:
-            # Also strip values
             row = {k.strip(): v.strip() for k, v in row.items()}
             users_to_track.append(row)
 
@@ -91,21 +87,26 @@ def process_extraction():
         with open(output_file, mode='r', encoding='utf-8') as f:
             reader = csv.DictReader(f)
             fieldnames = reader.fieldnames
+            # Backward compatibility: rename 'total' to 'total_2026' if it exists
+            if 'total' in fieldnames:
+                fieldnames = [f if f != 'total' else 'total_2026' for f in fieldnames]
+            
             for row in reader:
+                # If the row has a 'total' key, move it to 'total_2026'
+                if 'total' in row:
+                    row['total_2026'] = row.pop('total')
                 existing_data[row['Link']] = row
 
-    # Ensure fieldnames has the new date and 'total'
+    # Ensure required total columns exist
+    if 'total_2026' not in fieldnames:
+        fieldnames.append('total_2026')
+    if 'total_lifetime' not in fieldnames:
+        fieldnames.append('total_lifetime')
+
+    # Ensure today's date column is inserted before the total columns
     if today_str not in fieldnames:
-        # Insert today's date before the 'total' column if 'total' exists
-        if 'total' in fieldnames:
-            total_index = fieldnames.index('total')
-            fieldnames.insert(total_index, today_str)
-        else:
-            fieldnames.append(today_str)
-            fieldnames.append('total')
-    
-    if 'total' not in fieldnames:
-        fieldnames.append('total')
+        insert_idx = fieldnames.index('total_2026')
+        fieldnames.insert(insert_idx, today_str)
 
     updated_rows = []
     for user in users_to_track:
@@ -115,27 +116,30 @@ def process_extraction():
         username = extract_username(link)
         
         print(f"Fetching data for {name} ({username})...")
-        current_total = get_total_contributions(username)
+        contrib_data = get_total_contributions(username)
         
         row = existing_data.get(link, {'Name': name, 'Dept': dept, 'Link': link})
         
-        if current_total is not None:
-            # Calculate diff
-            prev_total_str = row.get('total', '0')
-            try:
-                prev_total = int(prev_total_str) if prev_total_str else 0
-            except ValueError:
-                prev_total = 0
+        if contrib_data:
+            current_2026 = contrib_data['total_2026']
+            current_lifetime = contrib_data['total_lifetime']
             
-            # If it's the first time (no total yet), diff is the current_total
-            # Otherwise, diff is current_total - prev_total
-            if 'total' not in row or not row['total']:
-                diff = current_total
+            # Calculate daily diff based on total_2026
+            prev_total_2026_str = row.get('total_2026', '0')
+            try:
+                prev_total_2026 = int(prev_total_2026_str) if prev_total_2026_str else 0
+            except ValueError:
+                prev_total_2026 = 0
+            
+            # Diff calculation
+            if 'total_2026' not in row or not row['total_2026']:
+                diff = current_2026
             else:
-                diff = current_total - prev_total
+                diff = current_2026 - prev_total_2026
                 
             row[today_str] = diff
-            row['total'] = current_total
+            row['total_2026'] = current_2026
+            row['total_lifetime'] = current_lifetime
         else:
             row[today_str] = "Error"
             
