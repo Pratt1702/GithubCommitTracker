@@ -6,3 +6,4 @@ committracker.db-shm
 committracker.db-wal
 dist/
 dist-electron/
+*.tsbuildinfo
