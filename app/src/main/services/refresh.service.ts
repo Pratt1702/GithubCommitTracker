@@ -59,6 +59,28 @@ export interface RefreshOptions {
  * corrupt — the bug in the original Python script, where a second same-day run
  * subtracted the already-updated total from itself.
  */
+function getStudentYears(studentId: number, mode: 'incremental' | 'full', currentYear: number): number[] {
+  if (mode === 'full') {
+    return Array.from({ length: currentYear - EARLIEST_YEAR + 1 }, (_, i) => EARLIEST_YEAR + i);
+  }
+
+  const lastSynced = contributions.getLastSyncedAt(studentId);
+  if (!lastSynced) {
+    return [currentYear];
+  }
+
+  const lastYear = new Date(lastSynced).getFullYear();
+  if (isNaN(lastYear) || lastYear < EARLIEST_YEAR || lastYear > currentYear) {
+    return [currentYear];
+  }
+
+  const result: number[] = [];
+  for (let y = lastYear; y <= currentYear; y++) {
+    result.push(y);
+  }
+  return result;
+}
+
 export async function runRefresh(options: RefreshOptions = {}): Promise<RefreshProgress> {
   if (running) throw new Error('A refresh is already in progress');
 
@@ -73,10 +95,6 @@ export async function runRefresh(options: RefreshOptions = {}): Promise<RefreshP
 
   const runId = runs.start(cohort.length, cohortId);
   const currentYear = new Date().getFullYear();
-  const years =
-    mode === 'full'
-      ? Array.from({ length: currentYear - EARLIEST_YEAR + 1 }, (_, i) => EARLIEST_YEAR + i)
-      : [currentYear];
 
   let ok = 0;
   let failed = 0;
@@ -99,7 +117,8 @@ export async function runRefresh(options: RefreshOptions = {}): Promise<RefreshP
       emit(progressOf(student.name));
 
       try {
-        for (const year of years) {
+        const studentYears = getStudentYears(student.id, mode, currentYear);
+        for (const year of studentYears) {
           if (cancelRequested) break;
           const scrape = await scrapeYear(student.username, year);
           contributions.replaceYear(student.id, year, scrape.days);

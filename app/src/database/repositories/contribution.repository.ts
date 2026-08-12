@@ -57,6 +57,13 @@ export class ContributionRepository {
     ).run(studentId, error, error);
   }
 
+  getLastSyncedAt(studentId: number): string | null {
+    const row = db
+      .prepare(`SELECT last_synced_at FROM sync_state WHERE student_id = ?`)
+      .get(studentId) as { last_synced_at: string | null } | undefined;
+    return row?.last_synced_at ?? null;
+  }
+
   /** Earliest contribution date on record, used by the "All time" preset. */
   earliestDate(cohortId?: number): string | null {
     const r = (
