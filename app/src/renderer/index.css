@@ -429,6 +429,37 @@ h1.page {
   color: #fff;
 }
 
+.brand-ver {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--dimmer);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 1px 6px;
+  margin-left: var(--sp-1);
+}
+
+/* GitHub repo button + update badge in the title bar. */
+.win-btn svg {
+  fill: currentColor;
+}
+.win-btn.update {
+  width: auto;
+  padding: 0 10px;
+  font-size: var(--fs-sm);
+  font-family: var(--mono);
+  color: var(--fg-bright);
+  border-left: 1px solid var(--line);
+}
+.win-btn.update:hover {
+  background: var(--hover);
+  color: var(--primary);
+}
+.win-btn.update.ready {
+  color: var(--primary);
+  border: 1px solid var(--primary);
+}
+
 /* ============================================================================
    Buttons
    ========================================================================= */
