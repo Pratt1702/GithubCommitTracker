@@ -1,0 +1,58 @@
+{
+  "name": "commit-tracker",
+  "productName": "CommitTracker",
+  "private": true,
+  "version": "1.0.0",
+  "description": "Faculty dashboard for tracking student GitHub contribution activity.",
+  "author": {
+    "name": "Pratheek",
+    "email": "faculty@example.com"
+  },
+  "type": "module",
+  "main": "dist-electron/main/index.cjs",
+  "scripts": {
+    "postinstall": "electron-builder install-app-deps",
+    "rebuild": "electron-builder install-app-deps",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "build:main": "vite build --config vite.main.config.ts",
+    "build:preload": "vite build --config vite.preload.config.ts",
+    "build:electron": "npm run build:preload && npm run build:main",
+    "build:seed": "vite build --config vite.seed.config.ts",
+    "seed": "npm run build:seed && electron --no-sandbox --disable-gpu dist-electron/seed/seed.cjs",
+    "build:shot": "vite build --config vite.shot.config.ts",
+    "shot": "npm run build && npm run build:electron && npm run build:shot && electron --no-sandbox dist-electron/main/shot.cjs",
+    "build:verify": "vite build --config vite.verify.config.ts",
+    "verify": "npm run build:verify && electron --no-sandbox --disable-gpu scripts/verify.cjs",
+    "electron:dev": "npm run build:electron && concurrently -k -n \"vite,electron\" -c \"cyan,yellow\" \"vite\" \"wait-on tcp:5173 && cross-env NODE_ENV=development electron . --ozone-platform=x11\"",
+    "electron:preview": "npm run build && npm run build:electron && electron .",
+    "electron:build": "npm run build && npm run build:electron && electron-builder --config electron-builder.config.cjs",
+    "electron:build:win": "npm run build && npm run build:electron && electron-builder --win nsis portable --config electron-builder.config.cjs",
+    "electron:build:linux": "npm run build && npm run build:electron && electron-builder --linux AppImage deb --config electron-builder.config.cjs",
+    "test": "vitest run"
+  },
+  "dependencies": {
+    "@fontsource/geist": "^5.3.0",
+    "@fontsource/jetbrains-mono": "^5.3.0",
+    "better-sqlite3": "^12.10.0",
+    "electron-log": "^5.4.4",
+    "recharts": "^3.10.0"
+  },
+  "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
+    "@types/node": "^24.13.2",
+    "@types/react": "^19.2.14",
+    "@types/react-dom": "^19.2.3",
+    "@vitejs/plugin-react": "^6.0.1",
+    "concurrently": "^9.2.4",
+    "cross-env": "^7.0.3",
+    "electron": "^41.7.2",
+    "electron-builder": "^26.15.3",
+    "react": "^19.2.6",
+    "react-dom": "^19.2.6",
+    "typescript": "~6.0.2",
+    "vite": "^8.0.12",
+    "vitest": "^4.1.8",
+    "wait-on": "^9.0.10"
+  }
+}

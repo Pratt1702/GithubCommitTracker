@@ -1,0 +1,24 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <rect width="512" height="512" rx="96" fill="#0f1115"/>
+  <!-- contribution grid motif -->
+  <g>
+    <rect x="72"  y="286" width="46" height="46" rx="9" fill="#0e4429"/>
+    <rect x="132" y="286" width="46" height="46" rx="9" fill="#006d32"/>
+    <rect x="192" y="286" width="46" height="46" rx="9" fill="#26a641"/>
+    <rect x="252" y="286" width="46" height="46" rx="9" fill="#39d353"/>
+    <rect x="312" y="286" width="46" height="46" rx="9" fill="#26a641"/>
+    <rect x="372" y="286" width="46" height="46" rx="9" fill="#006d32"/>
+
+    <rect x="72"  y="346" width="46" height="46" rx="9" fill="#1b2027"/>
+    <rect x="132" y="346" width="46" height="46" rx="9" fill="#0e4429"/>
+    <rect x="192" y="346" width="46" height="46" rx="9" fill="#006d32"/>
+    <rect x="252" y="346" width="46" height="46" rx="9" fill="#26a641"/>
+    <rect x="312" y="346" width="46" height="46" rx="9" fill="#0e4429"/>
+    <rect x="372" y="346" width="46" height="46" rx="9" fill="#1b2027"/>
+  </g>
+  <!-- rising trend line -->
+  <polyline points="86,232 170,196 254,214 338,140 412,104"
+            fill="none" stroke="#4f8cff" stroke-width="22"
+            stroke-linecap="round" stroke-linejoin="round"/>
+  <circle cx="412" cy="104" r="27" fill="#4f8cff"/>
+</svg>
