@@ -1,5 +1,6 @@
 import { ipcMain, dialog, shell, BrowserWindow, app, screen } from 'electron';
 import log from 'electron-log';
+import { autoUpdater } from 'electron-updater';
 import path from 'path';
 import db from '../../database/sqlite';
 import { CohortRepository } from '../../database/repositories/cohort.repository';
@@ -175,4 +176,16 @@ export function registerIpc(): void {
   handle('system:dbPath', () => getDbPath());
   handle('system:revealDb', () => shell.showItemInFolder(getDbPath()));
   handle('system:scaleFactor', () => screen.getPrimaryDisplay().scaleFactor);
+
+  // ── Auto-update (GitHub releases; Windows first) ──────────────────────────
+  handle('system:appVersion', () => app.getVersion());
+  handle('system:downloadUpdate', async () => {
+    if (process.platform !== 'win32') throw new Error('Updates are available on Windows');
+    await autoUpdater.downloadUpdate();
+    return true;
+  });
+  handle('system:quitAndInstall', () => {
+    if (process.platform !== 'win32') return;
+    autoUpdater.quitAndInstall(false, true);
+  });
 }

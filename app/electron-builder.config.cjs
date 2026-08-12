@@ -2,13 +2,22 @@ module.exports = {
   appId: 'com.faculty.committracker',
   productName: 'CommitTracker',
   copyright: `© ${new Date().getFullYear()} CommitTracker`,
+  // Build the GitHub-releases YAML so a tagged release becomes the update feed.
+  publish: {
+    provider: 'github',
+    owner: 'Pratt1702',
+    repo: 'GithubCommitTracker',
+  },
   directories: {
     output: 'release',
     buildResources: 'build',
   },
-  files: ['dist/**/*', 'dist-electron/**/*'],
+  // electron-updater ships a tiny runtime that must travel inside the app.asar.
+  files: ['dist/**/*', 'dist-electron/**/*', '!**/*.map'],
+  // Keep the auto-updater's helpers out of asar so it can self-replace on Windows.
+  asarUnpack: ['**/node_modules/electron-updater/**', '**/node_modules/builder-util-runtime/**'],
   win: {
-    target: ['nsis', 'portable'],
+    target: ['nsis'],
     icon: 'build/icon.png',
     requestedExecutionLevel: 'asInvoker',
   },

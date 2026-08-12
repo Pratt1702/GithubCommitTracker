@@ -137,6 +137,23 @@ const api = {
     openExternal: (url: string): Promise<void> => ipcRenderer.invoke('system:openExternal', url),
     dbPath: (): Promise<string> => ipcRenderer.invoke('system:dbPath'),
     revealDb: (): Promise<void> => ipcRenderer.invoke('system:revealDb'),
+    repoUrl: 'https://github.com/Pratt1702/GithubCommitTracker',
+    appVersion: (): Promise<string> => ipcRenderer.invoke('system:appVersion'),
+    downloadUpdate: (): Promise<boolean> => ipcRenderer.invoke('system:downloadUpdate'),
+    quitAndInstall: (): Promise<void> => ipcRenderer.invoke('system:quitAndInstall'),
+    /** Fired on Windows when a new release exists / has been downloaded. */
+    onUpdate: (
+      cb: (state: { available?: string; downloaded?: string }) => void,
+    ): (() => void) => {
+      const onAvail = (_: Electron.IpcRendererEvent, v: string) => cb({ available: v });
+      const onDone = (_: Electron.IpcRendererEvent, v: string) => cb({ downloaded: v });
+      ipcRenderer.on('system:update-available', onAvail);
+      ipcRenderer.on('system:update-downloaded', onDone);
+      return () => {
+        ipcRenderer.off('system:update-available', onAvail);
+        ipcRenderer.off('system:update-downloaded', onDone);
+      };
+    },
   },
 
   platform: process.platform as NodeJS.Platform,

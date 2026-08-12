@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { Cohort } from '../shared/types';
 import { useRefreshProgress, useTheme } from './hooks/useDashboard';
+import { useZoom } from './hooks/useZoom';
 import TitleBar from './components/TitleBar';
 import CohortsPage from './components/CohortsPage';
 import CohortDetail from './components/CohortDetail';
@@ -8,6 +9,7 @@ import { Toast } from './components/ui';
 
 export default function App() {
   const [theme, toggleTheme] = useTheme();
+  useZoom();
   const [cohorts, setCohorts] = useState<Cohort[]>([]);
   const [openId, setOpenId] = useState<number | null>(null);
   const [reloadToken, setReloadToken] = useState(0);
