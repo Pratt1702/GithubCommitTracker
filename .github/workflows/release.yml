@@ -36,7 +36,7 @@ jobs:
 
       - name: Build Windows Executable & Installer
         working-directory: ./app
-        run: npx electron-builder --win --config electron-builder.config.cjs
+        run: npx electron-builder --win --config electron-builder.config.cjs --publish never
 
       - name: Upload Build Artifacts to GitHub Release
         uses: softprops/action-gh-release@v2
