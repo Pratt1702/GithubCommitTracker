@@ -1,0 +1,1175 @@
+/* ============================================================================
+   CommitTracker — monochrome design system.
+
+   Single source of truth for every visual value in the app. Components must
+   only reference these tokens and the primitives below; no component should
+   hardcode a colour, radius, font size, or spacing value.
+
+   Grayscale only. Hierarchy comes from type scale, weight, spacing and border
+   contrast — never from hue. The two sign accents (--pos / --neg) are the sole
+   exception and are reserved for trend direction on numbers.
+   ========================================================================= */
+
+@import '@fontsource/geist/400.css';
+@import '@fontsource/geist/500.css';
+@import '@fontsource/geist/600.css';
+@import '@fontsource/jetbrains-mono/400.css';
+@import '@fontsource/jetbrains-mono/500.css';
+
+:root {
+  /* ── grayscale ramp (dark is the default theme) ───────────────────────── */
+  --bg: #0b0b0c;
+  --panel: #121214;
+  --panel-2: #17171a;
+  --fg: #e9eaec;
+  --fg-bright: #ffffff;
+  --dim: #9a9ca1;
+  --dimmer: #6a6c72;
+  --line: #26272b;
+  --line-bright: #3a3c42;
+  --hover: #16171a;
+  --hover-line: #2c2e33;
+
+  /* Heatmap / intensity ramp — grayscale, 5 steps from empty to densest. */
+  --heat-0: #1a1b1e;
+  --heat-1: #333438;
+  --heat-2: #55575d;
+  --heat-3: #8a8c92;
+  --heat-4: #e9eaec;
+
+  /* Chart ink: primary series, secondary series, grid, axis. */
+  --chart-1: #e9eaec;
+  --chart-2: #6a6c72;
+  --chart-grid: #26272b;
+  --chart-axis: #6a6c72;
+
+  /* ── shape + depth ───────────────────────────────────────────────────── */
+  --radius: 7px;
+  --radius-sm: 5px;
+  --radius-lg: 11px;
+  --radius-pill: 999px;
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.5);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.4);
+
+  /* ── type ────────────────────────────────────────────────────────────── */
+  --sans: 'Geist', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+  --mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, Consolas, monospace;
+
+  /* Weight hierarchy — deliberately narrow: 400 floor, 600 ceiling. */
+  --fw-regular: 400;
+  --fw-medium: 500;
+  --fw-semibold: 600;
+
+  /* Size scale. */
+  --fs-xs: 10px;
+  --fs-sm: 11px;
+  --fs-base: 12px;
+  --fs-md: 13px;
+  --fs-lg: 15px;
+  --fs-xl: 18px;
+  --fs-2xl: 24px;
+  --fs-3xl: 30px;
+
+  /* Tracking for the uppercase label style used throughout. */
+  --ls-label: 0.16em;
+  --ls-tight: 0.02em;
+
+  /* ── spacing scale (4px base) ────────────────────────────────────────── */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+
+  /* ── chrome ──────────────────────────────────────────────────────────── */
+  --titlebar-h: 38px;
+
+  /* ── sign accents: the ONLY non-monochrome colours in the app ─────────── */
+  --pos: #46c08a;
+  --neg: #e0625a;
+
+  --focus-ring: 0 0 0 1px var(--fg);
+  --t-fast: 0.12s;
+}
+
+:root[data-theme='light'] {
+  --bg: #f7f7f8;
+  --panel: #ffffff;
+  --panel-2: #f1f1f3;
+  --fg: #1a1b1e;
+  --fg-bright: #000000;
+  --dim: #63656b;
+  --dimmer: #9a9ca1;
+  --line: #e2e3e6;
+  --line-bright: #c7c9ce;
+  --hover: #efeff1;
+  --hover-line: #d7d9dd;
+
+  --heat-0: #e7e7ea;
+  --heat-1: #b9bbc1;
+  --heat-2: #7e8188;
+  --heat-3: #45474d;
+  --heat-4: #101114;
+
+  /* Light mode needs darker ink than the body text to keep bars/areas readable
+     against white; using --fg here washed the charts out. */
+  --chart-1: #101114;
+  --chart-2: #7e8188;
+  --chart-grid: #dcdde1;
+  --chart-axis: #75777d;
+
+  --shadow: 0 8px 28px rgba(0, 0, 0, 0.12);
+  --shadow-sm: 0 2px 10px rgba(0, 0, 0, 0.08);
+}
+
+/* ============================================================================
+   Base
+   ========================================================================= */
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: var(--sans);
+  font-size: var(--fs-md);
+  font-weight: var(--fw-regular);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+
+/* Global weight floor: nothing renders thinner than 400. */
+body,
+button,
+input,
+select,
+textarea,
+th,
+td {
+  font-weight: var(--fw-regular);
+}
+
+h1,
+h2,
+h3,
+h4,
+th,
+.label,
+.brand {
+  font-weight: var(--fw-semibold);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+  color: inherit;
+  background: none;
+  border: none;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+/* Scrollbars follow the theme instead of the OS default. */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--line-bright);
+  border-radius: var(--radius-pill);
+  border: 2px solid var(--bg);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--dimmer);
+}
+
+/* ============================================================================
+   Typography utilities
+   ========================================================================= */
+
+.label {
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--dim);
+}
+
+.dim {
+  color: var(--dim);
+}
+.dimmer {
+  color: var(--dimmer);
+}
+.bright {
+  color: var(--fg-bright);
+}
+.mono {
+  font-family: var(--mono);
+}
+.tabular {
+  font-variant-numeric: tabular-nums;
+}
+.nowrap {
+  white-space: nowrap;
+}
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.stat-value {
+  font-size: var(--fs-2xl);
+  font-weight: var(--fw-medium);
+  color: var(--fg-bright);
+  font-variant-numeric: tabular-nums;
+  letter-spacing: var(--ls-tight);
+  line-height: 1.15;
+}
+
+.pos {
+  color: var(--pos);
+}
+.neg {
+  color: var(--neg);
+}
+
+/* ============================================================================
+   Layout primitives
+   ========================================================================= */
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+}
+.row.between {
+  justify-content: space-between;
+}
+.row.wrap {
+  flex-wrap: wrap;
+}
+.row.tight {
+  gap: var(--sp-2);
+}
+.col {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-2);
+}
+.spacer {
+  flex: 1;
+}
+
+.app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.main {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--sp-5) var(--sp-6) var(--sp-7);
+}
+
+.page-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--sp-5);
+  flex-wrap: wrap;
+  margin-bottom: var(--sp-5);
+}
+
+h1.page {
+  font-size: var(--fs-xl);
+  letter-spacing: var(--ls-tight);
+  color: var(--fg-bright);
+}
+
+.page-sub {
+  font-size: var(--fs-base);
+  color: var(--dim);
+  margin-top: var(--sp-1);
+}
+
+.rule {
+  border: 0;
+  border-top: 1px solid var(--line);
+  margin: var(--sp-4) 0;
+}
+
+/* ============================================================================
+   Title bar (frameless window chrome)
+   ========================================================================= */
+
+.titlebar {
+  height: var(--titlebar-h);
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding-left: var(--sp-4);
+  background: var(--panel);
+  border-bottom: 1px solid var(--line);
+  -webkit-app-region: drag;
+  user-select: none;
+}
+
+.titlebar .no-drag,
+.titlebar button,
+.titlebar a {
+  -webkit-app-region: no-drag;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-sm);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--fg-bright);
+}
+
+.brand-mark {
+  width: 14px;
+  height: 14px;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 2px;
+}
+.brand-mark i {
+  background: var(--fg-bright);
+  border-radius: 1px;
+}
+.brand-mark i:nth-child(2) {
+  background: var(--dimmer);
+}
+.brand-mark i:nth-child(3) {
+  background: var(--dim);
+}
+
+.crumbs {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-base);
+  color: var(--dim);
+  min-width: 0;
+}
+.crumbs button {
+  color: var(--dim);
+}
+.crumbs button:hover {
+  color: var(--fg-bright);
+  text-decoration: underline;
+}
+.crumbs .sep {
+  color: var(--dimmer);
+}
+.crumbs .current {
+  color: var(--fg);
+}
+
+.win-controls {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  margin-left: auto;
+}
+
+.win-btn {
+  width: 44px;
+  display: grid;
+  place-items: center;
+  color: var(--dim);
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.win-btn:hover {
+  background: var(--hover);
+  color: var(--fg-bright);
+}
+.win-btn.close:hover {
+  background: var(--neg);
+  color: #fff;
+}
+
+/* ============================================================================
+   Buttons
+   ========================================================================= */
+
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--sp-2);
+  border: 1px solid var(--line-bright);
+  background: var(--panel);
+  color: var(--fg);
+  padding: 6px 12px;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  transition: background var(--t-fast), color var(--t-fast), border-color var(--t-fast);
+}
+.btn:hover:not(:disabled) {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+.btn.primary {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+.btn.primary:hover:not(:disabled) {
+  background: var(--fg-bright);
+  border-color: var(--fg-bright);
+}
+.btn.ghost {
+  border-color: transparent;
+  background: transparent;
+  color: var(--dim);
+  padding: 5px 8px;
+}
+.btn.ghost:hover:not(:disabled) {
+  background: var(--hover);
+  color: var(--fg-bright);
+  border-color: transparent;
+}
+.btn.danger {
+  border-color: var(--line-bright);
+  color: var(--neg);
+}
+.btn.danger:hover:not(:disabled) {
+  background: var(--neg);
+  border-color: var(--neg);
+  color: #fff;
+}
+.btn.sm {
+  padding: 4px 9px;
+  font-size: var(--fs-xs);
+}
+.btn.icon {
+  padding: 5px 7px;
+  letter-spacing: 0;
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.btn-group {
+  display: inline-flex;
+  border: 1px solid var(--line-bright);
+  border-radius: var(--radius-sm);
+  overflow: hidden;
+}
+.btn-group button {
+  padding: 6px 11px;
+  font-size: var(--fs-sm);
+  letter-spacing: 0.06em;
+  color: var(--dim);
+  background: var(--panel);
+  border-right: 1px solid var(--line);
+  white-space: nowrap;
+  transition: background var(--t-fast), color var(--t-fast);
+}
+.btn-group button:last-child {
+  border-right: 0;
+}
+.btn-group button:hover {
+  background: var(--hover);
+  color: var(--fg);
+}
+.btn-group button.active {
+  background: var(--fg);
+  color: var(--bg);
+}
+
+/* ============================================================================
+   Form controls
+   ========================================================================= */
+
+.field {
+  border: 1px solid var(--line-bright);
+  background: var(--bg);
+  color: var(--fg);
+  padding: 7px 10px;
+  font-size: var(--fs-base);
+  border-radius: var(--radius-sm);
+  width: 100%;
+}
+.field:focus {
+  outline: none;
+  border-color: var(--fg);
+  box-shadow: var(--focus-ring);
+}
+.field::placeholder {
+  color: var(--dimmer);
+}
+
+/* Native controls default to the OS light scheme; force ours. */
+select.field,
+input.field,
+textarea.field {
+  color-scheme: dark;
+}
+:root[data-theme='light'] select.field,
+:root[data-theme='light'] input.field,
+:root[data-theme='light'] textarea.field {
+  color-scheme: light;
+}
+
+select.field {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: linear-gradient(45deg, transparent 50%, var(--dim) 50%),
+    linear-gradient(135deg, var(--dim) 50%, transparent 50%);
+  background-position: calc(100% - 14px) calc(50% + 1px), calc(100% - 9px) calc(50% + 1px);
+  background-size: 5px 5px, 5px 5px;
+  background-repeat: no-repeat;
+  padding-right: 28px;
+}
+select.field option {
+  background: var(--bg);
+  color: var(--fg);
+}
+
+.field.search {
+  min-width: 260px;
+  width: auto;
+}
+.field.inline {
+  width: auto;
+}
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-1);
+  margin-bottom: var(--sp-3);
+}
+.form-row > .label {
+  margin-bottom: 2px;
+}
+
+.form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--sp-3);
+}
+
+.check {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  font-size: var(--fs-base);
+  color: var(--dim);
+  cursor: pointer;
+  user-select: none;
+}
+.check input {
+  width: 13px;
+  height: 13px;
+  accent-color: var(--fg);
+  cursor: pointer;
+}
+.check:hover {
+  color: var(--fg);
+}
+
+/* ============================================================================
+   Surfaces
+   ========================================================================= */
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+
+/* Stat strip: hairline-separated cells sharing one border box. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+  gap: 1px;
+  background: var(--line);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: var(--sp-4);
+}
+.stat {
+  background: var(--panel);
+  padding: var(--sp-3) var(--sp-4);
+}
+.stat .label {
+  margin-bottom: var(--sp-2);
+}
+.stat-sub {
+  margin-top: var(--sp-1);
+  font-size: var(--fs-sm);
+  color: var(--dimmer);
+}
+
+/* ============================================================================
+   Cohort cards
+   ========================================================================= */
+
+.cohort-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(310px, 1fr));
+  gap: var(--sp-3);
+}
+
+.cohort-card {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: var(--sp-4);
+  cursor: pointer;
+  text-align: left;
+  display: flex;
+  flex-direction: column;
+  gap: var(--sp-3);
+  transition: border-color var(--t-fast), background var(--t-fast);
+}
+.cohort-card:hover {
+  border-color: var(--line-bright);
+  background: var(--panel-2);
+}
+
+.cohort-name {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-medium);
+  color: var(--fg-bright);
+  letter-spacing: var(--ls-tight);
+}
+
+.cohort-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--sp-1);
+}
+
+.cohort-figures {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--sp-2);
+  padding-top: var(--sp-3);
+  border-top: 1px solid var(--line);
+}
+.cohort-figure .label {
+  font-size: 9px;
+  margin-bottom: 2px;
+}
+.cohort-figure .v {
+  font-size: var(--fs-lg);
+  font-weight: var(--fw-medium);
+  color: var(--fg-bright);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ============================================================================
+   Sparkline / bars (CSS-only, used inside cards and table cells)
+   ========================================================================= */
+
+.spark {
+  display: flex;
+  align-items: flex-end;
+  gap: 1px;
+  height: 30px;
+}
+.spark i {
+  flex: 1;
+  min-width: 1px;
+  min-height: 1px;
+  background: var(--heat-2);
+  border-radius: 1px;
+}
+.spark i.on {
+  background: var(--heat-4);
+}
+
+.bar-cell {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  justify-content: flex-end;
+}
+.bar-track {
+  width: 54px;
+  height: 4px;
+  background: var(--heat-0);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+.bar-track i {
+  display: block;
+  height: 100%;
+  /* min-width keeps a small-but-nonzero value visible rather than a hairline. */
+  min-width: 3px;
+  background: var(--heat-3);
+  border-radius: var(--radius-pill);
+}
+
+/* ============================================================================
+   Tags
+   ========================================================================= */
+
+.tag {
+  display: inline-block;
+  font-size: 9px;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  padding: 2px 7px;
+  border: 1px solid var(--line-bright);
+  color: var(--dim);
+  border-radius: var(--radius-pill);
+  white-space: nowrap;
+}
+.tag.solid {
+  background: var(--fg);
+  color: var(--bg);
+  border-color: var(--fg);
+}
+.tag.quiet {
+  border-color: var(--line);
+  color: var(--dimmer);
+}
+.tag.alert {
+  border-color: var(--neg);
+  color: var(--neg);
+}
+
+/* ============================================================================
+   Tables
+   ========================================================================= */
+
+.table-wrap {
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  overflow: auto;
+  background: var(--panel);
+  max-height: calc(100vh - 330px);
+}
+
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: var(--fs-base);
+}
+
+thead th {
+  position: sticky;
+  top: 0;
+  z-index: 2;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--line-bright);
+  text-align: left;
+  padding: var(--sp-2) var(--sp-3);
+  font-size: var(--fs-xs);
+  letter-spacing: var(--ls-label);
+  text-transform: uppercase;
+  color: var(--dim);
+  white-space: nowrap;
+  user-select: none;
+}
+thead th.sortable {
+  cursor: pointer;
+}
+thead th.sortable:hover {
+  color: var(--fg-bright);
+}
+.sort-arrow {
+  margin-left: 4px;
+  color: var(--fg-bright);
+}
+
+tbody td {
+  padding: var(--sp-2) var(--sp-3);
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+tbody tr:last-child td {
+  border-bottom: 0;
+}
+tbody tr:hover td {
+  background: var(--hover);
+}
+
+td.num,
+th.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  font-family: var(--mono);
+}
+
+.cell-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  min-width: 0;
+}
+.cell-stack .top {
+  color: var(--fg-bright);
+  font-weight: var(--fw-medium);
+}
+.cell-stack .sub {
+  font-family: var(--mono);
+  font-size: var(--fs-xs);
+  color: var(--dimmer);
+}
+.link-handle:hover {
+  color: var(--fg-bright);
+  text-decoration: underline;
+}
+
+.row-actions {
+  display: flex;
+  gap: var(--sp-1);
+  justify-content: flex-end;
+}
+
+/* ============================================================================
+   Menus / popovers
+   ========================================================================= */
+
+.pop-wrap {
+  position: relative;
+}
+
+.menu {
+  position: absolute;
+  z-index: 40;
+  min-width: 186px;
+  background: var(--panel);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  padding: var(--sp-1);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+.menu.right {
+  right: 0;
+  top: calc(100% + 4px);
+}
+.menu.left {
+  left: 0;
+  top: calc(100% + 4px);
+}
+
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 6px 9px;
+  font-size: var(--fs-base);
+  color: var(--fg);
+  border-radius: var(--radius-sm);
+  text-align: left;
+  width: 100%;
+  white-space: nowrap;
+}
+.menu-item:hover {
+  background: var(--fg);
+  color: var(--bg);
+}
+.menu-item.danger {
+  color: var(--neg);
+}
+.menu-item.danger:hover {
+  background: var(--neg);
+  color: #fff;
+}
+.menu-sep {
+  height: 1px;
+  background: var(--line);
+  margin: var(--sp-1) 0;
+}
+.menu-scroll {
+  max-height: 300px
+;
+  overflow-y: auto;
+}
+
+/* ============================================================================
+   Modals
+   ========================================================================= */
+
+.overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.68);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--sp-5);
+  z-index: 100;
+}
+:root[data-theme='light'] .overlay {
+  background: rgba(0, 0, 0, 0.34);
+}
+
+.modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 88vh;
+  overflow-y: auto;
+  background: var(--bg);
+  border: 1px solid var(--line-bright);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: var(--sp-5);
+}
+.modal.wide {
+  max-width: 880px;
+}
+
+.modal h2 {
+  font-size: var(--fs-lg);
+  color: var(--fg-bright);
+  letter-spacing: var(--ls-tight);
+}
+.modal .sub {
+  font-size: var(--fs-base);
+  color: var(--dim);
+  margin-top: var(--sp-1);
+  margin-bottom: var(--sp-4);
+  line-height: 1.6;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--sp-2);
+  margin-top: var(--sp-5);
+}
+
+/* ============================================================================
+   Notices, progress, toast
+   ========================================================================= */
+
+.notice {
+  border: 1px solid var(--line);
+  border-left: 2px solid var(--fg);
+  background: var(--panel);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3);
+  font-size: var(--fs-base);
+  color: var(--dim);
+  line-height: 1.6;
+  margin-bottom: var(--sp-4);
+}
+.notice.alert {
+  border-left-color: var(--neg);
+}
+.notice strong {
+  color: var(--fg);
+  font-weight: var(--fw-medium);
+}
+
+.progress {
+  height: 2px;
+  background: var(--line);
+  border-radius: var(--radius-pill);
+  overflow: hidden;
+  flex: 1;
+  max-width: 300px;
+}
+.progress i {
+  display: block;
+  height: 100%;
+  background: var(--fg-bright);
+  transition: width 0.2s;
+}
+
+.sync-strip {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-3);
+  padding: var(--sp-2) var(--sp-6);
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--line);
+  font-size: var(--fs-base);
+  color: var(--dim);
+  flex-shrink: 0;
+}
+
+.toast {
+  position: fixed;
+  bottom: var(--sp-5);
+  right: var(--sp-5);
+  z-index: 200;
+  max-width: 420px;
+  background: var(--panel);
+  border: 1px solid var(--line-bright);
+  border-left: 2px solid var(--fg);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3) var(--sp-4);
+  font-size: var(--fs-base);
+  box-shadow: var(--shadow);
+}
+.toast.alert {
+  border-left-color: var(--neg);
+}
+
+.spinner {
+  width: 11px;
+  height: 11px;
+  border: 1.5px solid var(--line-bright);
+  border-top-color: var(--fg-bright);
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+  display: inline-block;
+  flex-shrink: 0;
+}
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ============================================================================
+   Empty states
+   ========================================================================= */
+
+.empty {
+  padding: var(--sp-7) var(--sp-5);
+  text-align: center;
+  color: var(--dimmer);
+}
+.empty h3 {
+  color: var(--fg-bright);
+  font-size: var(--fs-lg);
+  margin-bottom: var(--sp-2);
+}
+.empty p {
+  font-size: var(--fs-base);
+  color: var(--dim);
+  max-width: 480px;
+  margin: 0 auto var(--sp-4);
+  line-height: 1.65;
+}
+
+/* ============================================================================
+   Heatmap
+   ========================================================================= */
+
+.heatmap {
+  display: flex;
+  gap: 3px;
+  overflow-x: auto;
+  padding-bottom: var(--sp-1);
+}
+.heat-week {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.heat-day {
+  width: 11px;
+  height: 11px;
+  border-radius: 2px;
+  background: var(--heat-0);
+  flex-shrink: 0;
+}
+.heat-day.l1 {
+  background: var(--heat-1);
+}
+.heat-day.l2 {
+  background: var(--heat-2);
+}
+.heat-day.l3 {
+  background: var(--heat-3);
+}
+.heat-day.l4 {
+  background: var(--heat-4);
+}
+
+.legend {
+  display: flex;
+  align-items: center;
+  gap: var(--sp-1);
+  font-size: var(--fs-xs);
+  color: var(--dimmer);
+  margin-top: var(--sp-3);
+}
+
+/* ============================================================================
+   Charts
+   ========================================================================= */
+
+.chart-grid {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: var(--sp-3);
+  margin-bottom: var(--sp-4);
+}
+@media (max-width: 1240px) {
+  .chart-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-box {
+  height: 240px;
+}
+.chart-box.short {
+  height: 190px;
+}
+
+.recharts-surface:focus {
+  outline: none;
+}
