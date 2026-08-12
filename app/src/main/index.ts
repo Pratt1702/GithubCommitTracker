@@ -1,8 +1,24 @@
 import { app, BrowserWindow, shell } from 'electron';
 import path from 'path';
 import log from 'electron-log';
+import { autoUpdater } from 'electron-updater';
 import { initDb } from '../database/sqlite';
 import { registerIpc } from './ipc';
+
+// GitHub releases are the only update source, and we ship Windows (.exe/NSIS)
+// first. Nothing is auto-downloaded without the user's consent.
+autoUpdater.autoDownload = false;
+autoUpdater.autoInstallOnAppQuit = true;
+if (process.platform === 'win32') {
+  autoUpdater.setFeedURL({
+    provider: 'github',
+    owner: 'Pratt1702',
+    repo: 'GithubCommitTracker',
+  });
+  // Surface updater diagnostics to the same log file as the app.
+  autoUpdater.logger = log;
+  autoUpdater.on('error', (err) => log.error('auto-update error', err));
+}
 
 if (process.platform === 'linux') {
   app.commandLine.appendSwitch('ozone-platform', 'x11');
@@ -74,6 +90,26 @@ if (!gotLock) {
     initDb();
     registerIpc();
     createWindow();
+
+    // On Windows, ask GitHub releases for a newer version on launch (and once an
+    // hour). We never auto-download; the user opts in from the title bar badge.
+    if (process.platform === 'win32') {
+      const check = () => {
+        autoUpdater
+          .checkForUpdates()
+          .catch((err) => log.warn('update check skipped:', err.message));
+      };
+      autoUpdater.on('update-available', (info) => {
+        log.info('update available', info.version);
+        for (const w of BrowserWindow.getAllWindows()) w.webContents.send('system:update-available', info.version);
+      });
+      autoUpdater.on('update-downloaded', (info) => {
+        log.info('update downloaded, ready to install', info.version);
+        for (const w of BrowserWindow.getAllWindows()) w.webContents.send('system:update-downloaded', info.version);
+      });
+      setTimeout(check, 4000);
+      setInterval(check, 60 * 60 * 1000);
+    }
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createWindow();
