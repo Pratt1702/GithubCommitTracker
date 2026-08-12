@@ -439,6 +439,33 @@ h1.page {
   margin-left: var(--sp-1);
 }
 
+/* Zoom cluster in the title bar. */
+.zoom-ctl {
+  display: flex;
+  align-items: stretch;
+  height: 100%;
+  border-right: 1px solid var(--line);
+}
+.zoom-ctl .win-btn.slim {
+  width: 30px;
+}
+.zoom-val {
+  min-width: 42px;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: none;
+  color: var(--dim);
+  font-family: var(--mono);
+  font-size: 11px;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+  transition: color var(--t-fast);
+}
+.zoom-val:hover {
+  color: var(--fg-bright);
+}
+
 /* GitHub repo button + update badge in the title bar. */
 .win-btn svg {
   fill: currentColor;

@@ -22,6 +22,14 @@ export default function TitleBar({ crumbs, theme, onToggleTheme }: Props) {
   const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
   const [downloaded, setDownloaded] = useState<string | null>(null);
   const [installing, setInstalling] = useState(false);
+  const [zoom, setZoom] = useState<number>(() => {
+    try {
+      const raw = Number(localStorage.getItem('committracker.zoom'));
+      return Number.isFinite(raw) && raw >= 0.7 && raw <= 1.8 ? raw : 1;
+    } catch {
+      return 1;
+    }
+  });
 
   useEffect(() => {
     window.tracker.window.isMaximized().then(setMaximized);
@@ -30,17 +38,34 @@ export default function TitleBar({ crumbs, theme, onToggleTheme }: Props) {
 
   useEffect(() => {
     window.tracker.system.appVersion().then(setAppVersion);
+    const onZoom = (e: Event) => setZoom((e as CustomEvent<number>).detail);
+    window.addEventListener('zoom-changed', onZoom);
     // Live update status pushed from the Windows auto-updater.
-    return window.tracker.system.onUpdate((state) => {
+    const offUpdate = window.tracker.system.onUpdate((state) => {
       if (state.available) setUpdateAvailable(state.available);
       if (state.downloaded) {
         setDownloaded(state.downloaded);
         setUpdateAvailable(null);
       }
     });
+    return () => {
+      window.removeEventListener('zoom-changed', onZoom);
+      offUpdate();
+    };
   }, []);
 
   const openRepo = () => window.tracker.system.openExternal(window.tracker.system.repoUrl);
+
+  const setZoomLevel = (factor: number) => {
+    const next = Math.min(1.8, Math.max(0.7, Math.round(factor * 100) / 100));
+    try {
+      localStorage.setItem('committracker.zoom', String(next));
+    } catch {
+      /* ignore — in-session zoom only */
+    }
+    document.documentElement.style.zoom = String(next);
+    setZoom(next);
+  };
 
   const upgrade = async () => {
     try {
@@ -86,6 +111,19 @@ export default function TitleBar({ crumbs, theme, onToggleTheme }: Props) {
       </nav>
 
       <div className="win-controls">
+        {/* Zoom: Ctrl/Cmd + / - / 0 also works. */}
+        <div className="zoom-ctl" role="group" aria-label="Zoom">
+          <button className="win-btn slim" onClick={() => setZoomLevel(zoom - 0.1)} title="Zoom out (Ctrl/Cmd -)" aria-label="Zoom out">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1.5" y="5.5" width="9" height="1" fill="currentColor" /></svg>
+          </button>
+          <button className="zoom-val" onClick={() => setZoomLevel(1)} title="Reset zoom (Ctrl/Cmd 0)" aria-label="Reset zoom">
+            {Math.round(zoom * 100)}%
+          </button>
+          <button className="win-btn slim" onClick={() => setZoomLevel(zoom + 0.1)} title="Zoom in (Ctrl/Cmd +)" aria-label="Zoom in">
+            <svg width="12" height="12" viewBox="0 0 12 12"><rect x="1.5" y="5.5" width="9" height="1" fill="currentColor" /><rect x="5.5" y="1.5" width="1" height="9" fill="currentColor" /></svg>
+          </button>
+        </div>
+
         {/* GitHub repo — opens in the default browser. */}
         <button className="win-btn" onClick={openRepo} title="View source on GitHub" aria-label="Open GitHub repository">
           <svg width="15" height="15" viewBox="0 0 16 16" fill="currentColor" aria-hidden>
