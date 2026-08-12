@@ -1,2 +1,8 @@
 ExtractionResult.csv
 GitHubLinks.csv
+node_modules/
+committracker.db
+committracker.db-shm
+committracker.db-wal
+dist/
+dist-electron/
