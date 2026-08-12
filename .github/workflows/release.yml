@@ -28,14 +28,23 @@ jobs:
         working-directory: ./app
         run: npm ci
 
-      - name: Build App
+      - name: Build frontend & main process
         working-directory: ./app
         run: |
           npm run build
           npm run build:electron
 
-      - name: Package & Publish to GitHub Releases
+      - name: Build Windows Executable & Installer
         working-directory: ./app
+        run: npx electron-builder --win --config electron-builder.config.cjs
+
+      - name: Upload Build Artifacts to GitHub Release
+        uses: softprops/action-gh-release@v2
+        if: startsWith(github.ref, 'refs/tags/')
+        with:
+          files: |
+            app/release/*.exe
+            app/release/latest.yml
+            app/release/*.blockmap
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: npx electron-builder --config electron-builder.config.cjs --publish always
