@@ -22,6 +22,8 @@ export default function TitleBar({ crumbs, theme, onToggleTheme }: Props) {
   const [updateAvailable, setUpdateAvailable] = useState<string | null>(null);
   const [downloaded, setDownloaded] = useState<string | null>(null);
   const [installing, setInstalling] = useState(false);
+  const [checking, setChecking] = useState(false);
+  const isWin = window.tracker.platform === 'win32';
   const [zoom, setZoom] = useState<number>(() => {
     try {
       const raw = Number(localStorage.getItem('committracker.zoom'));
@@ -40,7 +42,7 @@ export default function TitleBar({ crumbs, theme, onToggleTheme }: Props) {
     window.tracker.system.appVersion().then(setAppVersion);
     const onZoom = (e: Event) => setZoom((e as CustomEvent<number>).detail);
     window.addEventListener('zoom-changed', onZoom);
-    // Live update status pushed from the Windows auto-updater.
+    // Live update status pushed from Windows auto-updater.
     const offUpdate = window.tracker.system.onUpdate((state) => {
       if (state.available) setUpdateAvailable(state.available);
       if (state.downloaded) {
@@ -48,9 +50,14 @@ export default function TitleBar({ crumbs, theme, onToggleTheme }: Props) {
         setUpdateAvailable(null);
       }
     });
+    const offError = window.tracker.system.onUpdateError((message) => {
+      // Surfaced by the toast in App; here we just log so the user can retry.
+      console.warn('update check failed:', message);
+    });
     return () => {
       window.removeEventListener('zoom-changed', onZoom);
       offUpdate();
+      offError();
     };
   }, []);
 
@@ -77,6 +84,22 @@ export default function TitleBar({ crumbs, theme, onToggleTheme }: Props) {
       await window.tracker.system.downloadUpdate();
     } catch (err) {
       console.error('update action failed', err);
+    }
+  };
+
+  const checkNow = async () => {
+    if (!isWin) return;
+    setChecking(true);
+    try {
+      const res = await window.tracker.system.checkUpdates();
+      if (res.ok && !res.updateAvailable) {
+        // Up to date — give a brief confirmation via the badge area.
+        setUpdateAvailable(null);
+      }
+    } catch (err) {
+      console.error('update check failed', err);
+    } finally {
+      setChecking(false);
     }
   };
 
@@ -131,7 +154,16 @@ export default function TitleBar({ crumbs, theme, onToggleTheme }: Props) {
           </svg>
         </button>
 
-        {/* Update badge — only meaningful on Windows builds. */}
+        {/* Update controls — only meaningful on Windows builds. */}
+        {isWin && !updateAvailable && !downloaded && (
+          <button className="win-btn" onClick={checkNow} disabled={checking} title="Check for updates" aria-label="Check for updates">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M21 12a9 9 0 1 1-3-6.7M21 4v4h-4" />
+            </svg>
+          </button>
+        )}
+
+        {/* Update badge — shows when a release is available / downloaded. */}
         {(updateAvailable || downloaded) && (
           <button
             className={`win-btn update${downloaded ? ' ready' : ''}`}
