@@ -670,6 +670,45 @@ select.field option {
   accent-color: var(--fg);
   cursor: pointer;
 }
+
+/* Two-column checklist of exportable columns. */
+.col-check {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-1) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3);
+  max-height: 240px;
+  overflow-y: auto;
+}
+@media (max-width: 720px) {
+  .col-check {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Selectable department pill used in the export + filter UIs. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  color: var(--dim);
+  cursor: pointer;
+  user-select: none;
+}
+.chip.on {
+  border-color: var(--fg);
+  color: var(--fg-bright);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
+}
+.chip input {
+  accent-color: var(--fg);
+}
 .check:hover {
   color: var(--fg);
 }

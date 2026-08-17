@@ -10,6 +10,7 @@ import type {
   DashboardSummary,
   DateRange,
   DeptOption,
+  ExportOptions,
   Granularity,
   ImportResult,
   RefreshProgress,
@@ -37,6 +38,10 @@ export interface ColumnMapDTO {
   link: number;
 }
 
+/** Every column the customizable export can emit. */
+export type { ExportColumnKey, ExportOptions } from '../shared/types';
+
+/** Options the Export modal sends to build a tailored CSV. */
 export interface CsvPreviewDTO {
   headers: string[];
   rows: string[][];
@@ -129,6 +134,11 @@ const api = {
       ipcRenderer.invoke('csv:import', cohortId, filePath, options ?? {}),
     exportStats: (stats: StudentStats[], windowLabel: string, cohortName: string): Promise<string | null> =>
       ipcRenderer.invoke('csv:exportStats', stats, windowLabel, cohortName),
+    exportCustom: (
+      cohortId: number,
+      options: ExportOptions,
+    ): Promise<{ path: string; count: number } | null> =>
+      ipcRenderer.invoke('csv:exportCustom', cohortId, options),
     exportDaily: (cohortId: number | undefined, range: DateRange): Promise<string | null> =>
       ipcRenderer.invoke('csv:exportDaily', cohortId, range),
   },
@@ -139,6 +149,8 @@ const api = {
     revealDb: (): Promise<void> => ipcRenderer.invoke('system:revealDb'),
     repoUrl: 'https://github.com/Pratt1702/GithubCommitTracker',
     appVersion: (): Promise<string> => ipcRenderer.invoke('system:appVersion'),
+    checkUpdates: (): Promise<{ ok: boolean; updateAvailable?: boolean; version?: string | null; reason?: string }> =>
+      ipcRenderer.invoke('system:checkUpdates'),
     downloadUpdate: (): Promise<boolean> => ipcRenderer.invoke('system:downloadUpdate'),
     quitAndInstall: (): Promise<void> => ipcRenderer.invoke('system:quitAndInstall'),
     /** Fired on Windows when a new release exists / has been downloaded. */
@@ -153,6 +165,12 @@ const api = {
         ipcRenderer.off('system:update-available', onAvail);
         ipcRenderer.off('system:update-downloaded', onDone);
       };
+    },
+    /** Fired when an update check fails (e.g. no network, no releases). */
+    onUpdateError: (cb: (message: string) => void): (() => void) => {
+      const handler = (_: Electron.IpcRendererEvent, message: string) => cb(message);
+      ipcRenderer.on('system:update-error', handler);
+      return () => ipcRenderer.off('system:update-error', handler);
     },
   },
 

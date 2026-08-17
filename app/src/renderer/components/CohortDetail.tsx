@@ -9,6 +9,7 @@ import ImportModal from './ImportModal';
 import StudentDetail from './StudentDetail';
 import { MoveStudentModal, StudentModal } from './StudentModal';
 import { ConfirmModal } from './ui';
+import ExportModal from './ExportModal';
 
 interface Props {
   cohort: Cohort;
@@ -44,6 +45,7 @@ export default function CohortDetail({
   const [viewing, setViewing] = useState<StudentStats | null>(null);
   const [moving, setMoving] = useState<StudentStats | null>(null);
   const [deleting, setDeleting] = useState<StudentStats | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   // Re-query whenever a refresh finishes or the cohort list changes upstream.
   useEffect(() => {
@@ -51,15 +53,6 @@ export default function CohortDetail({
   }, [reloadToken]);
 
   const windowLabel = rangeLabel(filters.preset);
-
-  const exportCsv = async () => {
-    try {
-      const path = await window.tracker.csv.exportStats(stats, windowLabel, cohort.name);
-      if (path) notify(`Exported to ${path}`);
-    } catch (err) {
-      notify(err instanceof Error ? err.message : String(err), 'alert');
-    }
-  };
 
   const isEmpty = !loading && !stats.length && !filters.search && !filters.depts.length;
 
@@ -103,7 +96,7 @@ export default function CohortDetail({
             departments={departments}
             onImport={() => setImporting(true)}
             onAddStudent={() => setAdding(true)}
-            onExport={exportCsv}
+            onExport={() => setExporting(true)}
             onRefresh={onRefresh}
             refreshing={refreshing}
           />
@@ -210,6 +203,19 @@ export default function CohortDetail({
             reload();
             onCohortsChanged();
           }}
+        />
+      )}
+
+      {exporting && (
+        <ExportModal
+          cohortId={cohort.id}
+          cohortName={cohort.name}
+          departments={departments}
+          initialDepts={filters.depts}
+          initialSearch={filters.search}
+          initialScope={filters.includeInactive ? 'both' : 'active'}
+          onClose={() => setExporting(false)}
+          onDone={(m) => notify(m)}
         />
       )}
     </div>

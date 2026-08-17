@@ -163,4 +163,38 @@ export interface DeptOption {
   count: number;
 }
 
+/** Every column the customizable cohort export can emit. */
+export type ExportColumnKey =
+  | 'name'
+  | 'regNo'
+  | 'email'
+  | 'dept'
+  | 'username'
+  | 'link'
+  | 'windowTotal'
+  | 'yearTotal'
+  | 'lifetimeTotal'
+  | 'activeDays'
+  | 'avgPerDay'
+  | 'currentStreak'
+  | 'bestStreak'
+  | 'lastActiveDate'
+  | 'lastSyncedAt'
+  | 'lastError'
+  | 'inactiveFlag';
+
+/** Options the Export modal sends to build a tailored CSV. */
+export interface ExportOptions {
+  /** Resolved date window driving windowTotal. */
+  range: DateRange;
+  /** Shown in the "Contributions (…)" header. */
+  windowLabel: string;
+  /** Include active only / inactive (archived) only / both. */
+  scope: 'active' | 'inactive' | 'both';
+  depts: string[];
+  search: string;
+  /** Which columns to write, in order. */
+  columns: ExportColumnKey[];
+}
+
 export type ThemeMode = 'dark' | 'light';
