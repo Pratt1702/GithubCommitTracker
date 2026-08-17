@@ -146,7 +146,47 @@ async function main() {
   check('error cleared on success', row.lastError, null);
   check('success timestamp set', typeof row.lastSyncedAt, 'string');
 
-  console.log('\n=== Changing a GitHub account clears stale history ===');
+  const { exportCustomCsv } = require(path.join(dist, 'csv.service.cjs'));
+
+  console.log('\n=== Customizable export (columns + scope + inactive flag) ===');
+  // A student with no contributions in the window — should flag YES.
+  const s4 = students.upsert(a, { name: 'Deepa N', regNo: '26CS004', dept: 'CSE', link: 'https://github.com/deepa' });
+  const allRows = contributions.stats({ range, cohortId: a, includeInactive: true });
+  const exportFile = path.join(os.tmpdir(), `ct-export-${Date.now()}.csv`);
+
+  // 1) Column selection: only Name + window-total + inactive flag.
+  const subsetCols = ['name', 'windowTotal', 'inactiveFlag'];
+  exportCustomCsv(exportFile, allRows, {
+    range,
+    windowLabel: 'Last 28 days',
+    scope: 'both',
+    depts: [],
+    search: '',
+    columns: subsetCols,
+  });
+  const subsetLines = fs.readFileSync(exportFile, 'utf8').trim().split('\n');
+  check('subset header has exactly the chosen columns', subsetLines[0], 'Name,Contributions (Last 28 days),Inactive in window?');
+  check('subset has one row per student in cohort A', subsetLines.length, allRows.length + 1);
+  const ashaRow = subsetLines.find((l) => l.startsWith('Asha'));
+  check('asha flagged NO (has contributions)', /NO$/.test(ashaRow), true);
+  const deepaRow = subsetLines.find((l) => l.startsWith('Deepa'));
+  check('deepa flagged YES (zero contributions in window)', /YES$/.test(deepaRow), true);
+
+  // 2) Scope filters rows: active-only excludes archived students.
+  const activeOnly = allRows.filter((s) => s.active === 1);
+  exportCustomCsv(exportFile, activeOnly, {
+    range,
+    windowLabel: 'Last 28 days',
+    scope: 'active',
+    depts: [],
+    search: '',
+    columns: ['name'],
+  });
+  const activeLines = fs.readFileSync(exportFile, 'utf8').trim().split('\n');
+  check('active-only export drops archived student', activeLines.length, activeOnly.length + 1);
+  students.delete(s4.id);
+  try { fs.unlinkSync(exportFile); } catch {}
+
   students.update(s1.id, { name: 'Asha Raman', regNo: '26CS001', dept: 'CSE', link: 'https://github.com/asha-new' });
   check('history dropped after account change', contributions.cohortTotal({ range, cohortId: a }, range), 7);
   throws('duplicate username within cohort rejected', () =>

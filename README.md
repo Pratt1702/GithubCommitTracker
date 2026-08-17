@@ -39,13 +39,23 @@ commit stats, streaks, and trends, with no API token required.
 - **Live table updates.** During a refresh, each student's row updates in the
   table as soon as its scrape finishes — you don't wait for the whole cohort.
 - **Edits.** Add/edit/archive/delete students, move a student between cohorts,
-  edit/delete a cohort (cascade). Export the table or a daily matrix to CSV.
+  edit/delete a cohort (cascade).
+- **Customizable CSV export (per cohort).** Click **Export** on a cohort to open
+  a modal where you choose: the **date window** (28 days · 3 months · 6 months ·
+  This year · Total · custom), **which students** (active only / archived only /
+  both, optional department + search filters), and **exactly which columns** to
+  include — Name, Register No, Email, Department, GitHub, Profile link,
+  Contributions (window / this year / lifetime), Active days, Avg/day, Current &
+  Best streak, Last active, Last synced, Sync error, and an **Inactive in window?**
+  (YES/NO) flag. Purely DB-driven, so it completes instantly — no live GitHub
+  scraping.
 - **Dark + light themes**, persisted. Monochrome design system, custom frameless
   title bar.
 - **GitHub auto-update (Windows).** On launch (and hourly) the Windows build
-  checks GitHub Releases for a newer version. Nothing downloads without your
-  consent — an *Update* badge appears in the title bar; click it to download,
-  then click again to restart and install.
+  checks GitHub Releases for a newer version. A **Check for updates** button in
+  the title bar lets you trigger a check manually, and updater errors surface in
+  the app log. Nothing downloads without your consent — an *Update* badge appears
+  in the title bar; click it to download, then click again to restart and install.
 
 ---
 
