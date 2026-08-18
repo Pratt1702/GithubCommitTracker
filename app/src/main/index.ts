@@ -17,7 +17,10 @@ if (process.platform === 'win32') {
   });
   // Surface updater diagnostics to the same log file as the app.
   autoUpdater.logger = log;
-  autoUpdater.on('error', (err) => log.error('auto-update error', err));
+  autoUpdater.on('error', (err) => {
+    log.error('auto-update error', err);
+    for (const w of BrowserWindow.getAllWindows()) w.webContents.send('system:update-error', err.message);
+  });
 }
 
 if (process.platform === 'linux') {

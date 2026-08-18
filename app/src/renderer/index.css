@@ -664,11 +664,84 @@ select.field option {
   cursor: pointer;
   user-select: none;
 }
-.check input {
-  width: 13px;
-  height: 13px;
-  accent-color: var(--fg);
+/* Custom checkbox shared by .check and .chip: hide the native control and draw
+   our own box so unchecked state is styled, not the OS default. */
+.check input[type='checkbox'],
+.chip input[type='checkbox'] {
+  appearance: none;
+  -webkit-appearance: none;
+  width: 15px;
+  height: 15px;
+  margin: 0;
+  flex: 0 0 auto;
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  background: var(--panel);
   cursor: pointer;
+  position: relative;
+  transition: border-color 0.12s ease, background 0.12s ease;
+}
+.check input[type='checkbox']:hover,
+.chip input[type='checkbox']:hover {
+  border-color: var(--fg-dim);
+}
+.check input[type='checkbox']:checked,
+.chip input[type='checkbox']:checked {
+  background: var(--fg);
+  border-color: var(--fg);
+}
+.check input[type='checkbox']:checked::after,
+.chip input[type='checkbox']:checked::after {
+  content: '';
+  position: absolute;
+  left: 4px;
+  top: 1px;
+  width: 4px;
+  height: 8px;
+  border: solid var(--bg);
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
+}
+.check input[type='checkbox']:focus-visible,
+.chip input[type='checkbox']:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--fg) 50%, transparent);
+  outline-offset: 1px;
+}
+
+/* Two-column checklist of exportable columns. */
+.col-check {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--sp-1) var(--sp-4);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: var(--sp-3);
+  max-height: 240px;
+  overflow-y: auto;
+}
+@media (max-width: 720px) {
+  .col-check {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Selectable department pill used in the export + filter UIs. */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--sp-2);
+  padding: 4px 10px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  font-size: var(--fs-sm);
+  color: var(--dim);
+  cursor: pointer;
+  user-select: none;
+}
+.chip.on {
+  border-color: var(--fg);
+  color: var(--fg-bright);
+  background: color-mix(in srgb, var(--fg) 8%, transparent);
 }
 .check:hover {
   color: var(--fg);

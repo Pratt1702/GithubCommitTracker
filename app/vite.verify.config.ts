@@ -19,6 +19,7 @@ export default defineConfig({
         'student.repository': 'src/database/repositories/student.repository.ts',
         'contribution.repository': 'src/database/repositories/contribution.repository.ts',
         'refresh-run.repository': 'src/database/repositories/refresh-run.repository.ts',
+        'csv.service': 'src/main/services/csv.service.ts',
       },
       external: ['electron', 'better-sqlite3', 'electron-log', ...builtinModules, ...builtinModules.map((m) => `node:${m}`)],
       output: {

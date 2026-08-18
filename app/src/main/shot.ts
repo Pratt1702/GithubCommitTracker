@@ -65,6 +65,15 @@ app.whenReady().then(async () => {
   await wait(2600);
   await shoot(win, 'ct-3-cohort-detail-dark');
 
+  // Open the customizable Export modal and capture it (dark).
+  await win.webContents.executeJavaScript(
+    `[...document.querySelectorAll('.toolbar button, .row button')].find(b=>b.textContent.trim()==='Export')?.click()`,
+  );
+  await wait(1800);
+  await shoot(win, 'ct-3b-export-dark');
+  await win.webContents.executeJavaScript(`document.querySelector('.overlay .btn.ghost')?.click()`);
+  await wait(600);
+
   await win.webContents.executeJavaScript(
     `(async()=>{document.documentElement.dataset.theme='light';await window.tracker.theme.set('light');})()`,
   );

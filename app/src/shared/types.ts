@@ -87,7 +87,10 @@ export interface StudentStats {
   /** Current streak counted backwards from the window end. */
   currentStreak: number;
   avgPerDay: number;
+  /** Most recent contributing day, or null if never contributed. */
   lastActiveDate: string | null;
+  /** Earliest contributing day ever, or null if never contributed. Used to anchor the all-time heatmap. */
+  firstActiveDate: string | null;
   lastSyncedAt: string | null;
   lastError: string | null;
 }
@@ -161,6 +164,40 @@ export interface ImportResult {
 export interface DeptOption {
   dept: string;
   count: number;
+}
+
+/** Every column the customizable cohort export can emit. */
+export type ExportColumnKey =
+  | 'name'
+  | 'regNo'
+  | 'email'
+  | 'dept'
+  | 'username'
+  | 'link'
+  | 'windowTotal'
+  | 'yearTotal'
+  | 'lifetimeTotal'
+  | 'activeDays'
+  | 'avgPerDay'
+  | 'currentStreak'
+  | 'bestStreak'
+  | 'lastActiveDate'
+  | 'lastSyncedAt'
+  | 'lastError'
+  | 'inactiveFlag';
+
+/** Options the Export modal sends to build a tailored CSV. */
+export interface ExportOptions {
+  /** Resolved date window driving windowTotal. */
+  range: DateRange;
+  /** Shown in the "Contributions (…)" header. */
+  windowLabel: string;
+  /** Include active only / inactive (archived) only / both. */
+  scope: 'active' | 'inactive' | 'both';
+  depts: string[];
+  search: string;
+  /** Which columns to write, in order. */
+  columns: ExportColumnKey[];
 }
 
 export type ThemeMode = 'dark' | 'light';

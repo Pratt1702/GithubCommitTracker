@@ -3,7 +3,7 @@ import log from 'electron-log';
 import { StudentRepository } from '../../database/repositories/student.repository';
 import { ContributionRepository } from '../../database/repositories/contribution.repository';
 import { extractUsername, parseCsv } from '../../shared/parsing';
-import type { ImportResult, StudentStats } from '../../shared/types';
+import type { ExportColumnKey, ExportOptions, ImportResult, StudentStats } from '../../shared/types';
 
 export { parseCsv };
 
@@ -239,4 +239,81 @@ export function exportDailyCsv(filePath: string, cohortId: number | undefined, f
     }
   }
   fs.writeFileSync(filePath, lines.join('\n'), 'utf8');
+}
+
+/** Header label for each optional export column. */
+const COLUMN_LABELS: Record<ExportColumnKey, (windowLabel: string) => string> = {
+  name: () => 'Name',
+  regNo: () => 'Register No',
+  email: () => 'Email',
+  dept: () => 'Department',
+  username: () => 'GitHub',
+  link: () => 'Profile link',
+  windowTotal: (w) => `Contributions (${w})`,
+  yearTotal: () => 'Contributions (This year)',
+  lifetimeTotal: () => 'Contributions (Lifetime)',
+  activeDays: () => 'Active days (window)',
+  avgPerDay: () => 'Avg / day',
+  currentStreak: () => 'Current streak',
+  bestStreak: () => 'Best streak',
+  lastActiveDate: () => 'Last active',
+  lastSyncedAt: () => 'Last synced',
+  lastError: () => 'Sync error',
+  inactiveFlag: () => 'Inactive in window?',
+};
+
+/**
+ * Builds a tailored CSV from already-aggregated student stats. Columns, window
+ * label and scope are chosen by the user in the Export modal. Purely DB-driven —
+ * no live GitHub scraping — so it runs instantly.
+ */
+export function exportCustomCsv(filePath: string, stats: StudentStats[], options: ExportOptions): number {
+  const cols = options.columns.length ? options.columns : (Object.keys(COLUMN_LABELS) as ExportColumnKey[]);
+  const header = cols.map((c) => csvEscape(COLUMN_LABELS[c](options.windowLabel)));
+  const lines = [header.join(',')];
+
+  for (const s of stats) {
+    const row = cols.map((c) => {
+      switch (c) {
+        case 'name':
+          return s.name;
+        case 'regNo':
+          return s.regNo;
+        case 'email':
+          return s.email;
+        case 'dept':
+          return s.dept;
+        case 'username':
+          return s.username;
+        case 'link':
+          return s.link;
+        case 'windowTotal':
+          return s.windowTotal;
+        case 'yearTotal':
+          return s.yearTotal;
+        case 'lifetimeTotal':
+          return s.lifetimeTotal;
+        case 'activeDays':
+          return s.activeDays;
+        case 'avgPerDay':
+          return s.avgPerDay;
+        case 'currentStreak':
+          return s.currentStreak;
+        case 'bestStreak':
+          return s.bestStreak;
+        case 'lastActiveDate':
+          return s.lastActiveDate ?? '';
+        case 'lastSyncedAt':
+          return s.lastSyncedAt ?? '';
+        case 'lastError':
+          return s.lastError ?? '';
+        case 'inactiveFlag':
+          return s.windowTotal === 0 ? 'YES' : 'NO';
+      }
+    });
+    lines.push(row.map(csvEscape).join(','));
+  }
+
+  fs.writeFileSync(filePath, lines.join('\n'), 'utf8');
+  return stats.length;
 }

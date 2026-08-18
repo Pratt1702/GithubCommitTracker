@@ -13,6 +13,7 @@ import {
   previewCsv,
   exportStatsCsv,
   exportDailyCsv,
+  exportCustomCsv,
   type ImportOptions,
 } from '../services/csv.service';
 import { runRefresh, cancelRefresh, isRefreshRunning, backfillNewStudents } from '../services/refresh.service';
@@ -21,6 +22,7 @@ import { getDbPath } from '../../database/sqlite';
 import type {
   CohortInput,
   DateRange,
+  ExportOptions,
   Granularity,
   StudentInput,
   StudentStats,
@@ -168,6 +170,37 @@ export function registerIpc(): void {
     return res.filePath;
   });
 
+  handle('csv:exportCustom', async (cohortId: number, options: ExportOptions) => {
+    // Pull every row in the window (incl. archived) so the scope choice below
+    // can include/exclude archived students as the user asked.
+    const all = contributions.stats({
+      range: options.range,
+      cohortId,
+      depts: options.depts,
+      search: options.search,
+      includeInactive: true,
+    });
+    const scoped =
+      options.scope === 'active'
+        ? all.filter((s) => s.active === 1)
+        : options.scope === 'inactive'
+          ? all.filter((s) => s.active === 0)
+          : all;
+
+    const win = focusedWindow();
+    const res = await dialog.showSaveDialog(win!, {
+      title: 'Export customized CSV',
+      defaultPath: path.join(
+        app.getPath('documents'),
+        `activity ${options.windowLabel} ${new Date().toISOString().slice(0, 10)}.csv`,
+      ),
+      filters: [{ name: 'CSV files', extensions: ['csv'] }],
+    });
+    if (res.canceled || !res.filePath) return null;
+    const count = exportCustomCsv(res.filePath, scoped, options);
+    return { path: res.filePath, count };
+  });
+
   // ── System ───────────────────────────────────────────────────────────────
   handle('system:openExternal', (url: string) => {
     if (!/^https:\/\/(www\.)?github\.com\//i.test(url)) throw new Error('Only github.com links may be opened');
@@ -179,6 +212,15 @@ export function registerIpc(): void {
 
   // ── Auto-update (GitHub releases; Windows first) ──────────────────────────
   handle('system:appVersion', () => app.getVersion());
+  handle('system:checkUpdates', async () => {
+    if (process.platform !== 'win32') return { ok: false, reason: 'Updates are available on Windows' };
+    try {
+      const res = await autoUpdater.checkForUpdates();
+      return { ok: true, updateAvailable: !!res?.updateInfo, version: res?.updateInfo?.version ?? null };
+    } catch (err) {
+      return { ok: false, reason: err instanceof Error ? err.message : String(err) };
+    }
+  });
   handle('system:downloadUpdate', async () => {
     if (process.platform !== 'win32') throw new Error('Updates are available on Windows');
     await autoUpdater.downloadUpdate();
