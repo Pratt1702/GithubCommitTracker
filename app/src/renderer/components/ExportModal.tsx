@@ -37,7 +37,29 @@ const ALL_COLUMNS: Array<{ key: ExportColumnKey; label: string }> = [
   { key: 'inactiveFlag', label: 'Inactive in window? (YES / NO)' },
 ];
 
-const DEFAULT_COLUMNS: ExportColumnKey[] = ALL_COLUMNS.map((c) => c.key);
+const DEFAULT_COLUMNS: ExportColumnKey[] = ALL_COLUMNS.map((c) => c.key).filter(
+  (k) => k !== 'lastSyncedAt' && k !== 'lastError',
+);
+
+const PREFS_KEY = 'committracker.exportPrefs';
+
+interface SavedPrefs {
+  preset: string;
+  custom: { from: string; to: string };
+  scope: 'active' | 'inactive' | 'both';
+  depts: string[];
+  search: string;
+  columns: ExportColumnKey[];
+}
+
+function loadPrefs(): Partial<SavedPrefs> | null {
+  try {
+    const raw = localStorage.getItem(PREFS_KEY);
+    return raw ? (JSON.parse(raw) as SavedPrefs) : null;
+  } catch {
+    return null;
+  }
+}
 
 /**
  * Customizable cohort export: pick the window, which students (active / archived
@@ -54,12 +76,13 @@ export default function ExportModal({
   onClose,
   onDone,
 }: Props) {
-  const [preset, setPreset] = useState<string>('28d');
-  const [custom, setCustom] = useState<{ from: string; to: string }>({ from: '', to: '' });
-  const [scope, setScope] = useState<'active' | 'inactive' | 'both'>(initialScope);
-  const [depts, setDepts] = useState<string[]>(initialDepts);
-  const [search, setSearch] = useState(initialSearch);
-  const [columns, setColumns] = useState<ExportColumnKey[]>(DEFAULT_COLUMNS);
+  const prefs = loadPrefs() ?? {};
+  const [preset, setPreset] = useState<string>(prefs.preset ?? '28d');
+  const [custom, setCustom] = useState<{ from: string; to: string }>(prefs.custom ?? { from: '', to: '' });
+  const [scope, setScope] = useState<'active' | 'inactive' | 'both'>(prefs.scope ?? initialScope);
+  const [depts, setDepts] = useState<string[]>(prefs.depts ?? initialDepts);
+  const [search, setSearch] = useState(prefs.search ?? initialSearch);
+  const [columns, setColumns] = useState<ExportColumnKey[]>(prefs.columns ?? DEFAULT_COLUMNS);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -96,6 +119,14 @@ export default function ExportModal({
         search,
         columns,
       };
+      try {
+        localStorage.setItem(
+          PREFS_KEY,
+          JSON.stringify({ preset, custom, scope, depts, search, columns } satisfies SavedPrefs),
+        );
+      } catch {
+        /* prefs are best-effort; ignore storage failures */
+      }
       const res = await window.tracker.csv.exportCustom(cohortId, options);
       if (!res) {
         onClose();
