@@ -165,13 +165,29 @@ export class ContributionRepository {
       sumById.set(r.student_id, (sumById.get(r.student_id) ?? 0) + r.count);
     }
 
+    // Streaks are lifetime, not window-scoped: every contributing day the
+    // student ever had, so a 90-day window doesn't truncate a longer streak.
+    const lifetimeRows = db
+      .prepare(
+        `SELECT student_id, date FROM contributions
+         WHERE student_id IN (${ph}) AND count > 0
+         ORDER BY student_id, date`,
+      )
+      .all(...ids) as Array<{ student_id: number; date: string }>;
+    const lifetimeDaysById = new Map<number, string[]>();
+    for (const r of lifetimeRows) {
+      if (!lifetimeDaysById.has(r.student_id)) lifetimeDaysById.set(r.student_id, []);
+      lifetimeDaysById.get(r.student_id)!.push(r.date);
+    }
+
     const windowLen = Math.max(1, daysBetween(range.from, range.to));
 
     return students.map((s) => {
       const days = daysById.get(s.id) ?? [];
+      const lifetimeDays = lifetimeDaysById.get(s.id) ?? [];
       const t = totalsById.get(s.id);
       const windowTotal = sumById.get(s.id) ?? 0;
-      const { best, current } = streaks(days, range.to);
+      const { best, current } = streaks(lifetimeDays, range.to);
       return {
         id: s.id,
         cohortId: s.cohort_id,

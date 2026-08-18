@@ -99,6 +99,30 @@ async function main() {
   check('whole-year replace reflects removed days', corrected.windowTotal, 1);
   check('zero-count days are not stored', corrected.activeDays, 1);
 
+  console.log('\n=== Streaks are lifetime, not window-scoped ===');
+  // A student whose longest run is in a PRIOR year must still report that as the
+  // best streak, while the window total only counts the current window.
+  const sStreak = students.upsert(a, { name: 'Streak S', regNo: '26CS050', dept: 'CSE', link: 'https://github.com/streaks' });
+  contributions.replaceYear(sStreak.id, 2025, [
+    { date: '2025-01-01', count: 1 },
+    { date: '2025-01-02', count: 1 },
+    { date: '2025-01-03', count: 1 },
+    { date: '2025-01-04', count: 1 },
+  ]);
+  contributions.replaceYear(sStreak.id, year, [
+    { date: `${year}-08-10`, count: 1 },
+    { date: `${year}-08-11`, count: 1 },
+    { date: `${year}-08-12`, count: 1 },
+    { date: `${year}-08-29`, count: 1 },
+    { date: `${year}-08-30`, count: 1 },
+    { date: `${year}-08-31`, count: 1 },
+  ]);
+  const streakRow = contributions.stats({ range, cohortId: a }).find((s) => s.id === sStreak.id);
+  check('best streak is lifetime (4 in 2025, not the 3-day window run)', streakRow.bestStreak, 4);
+  check('current streak anchors on today/range end (08-29..08-31 = 3)', streakRow.currentStreak, 3);
+  check('window total stays window-scoped (6 days, excludes 2025)', streakRow.windowTotal, 6);
+  students.delete(sStreak.id);
+
   console.log('\n=== Scoping, search, filters ===');
   contributions.replaceYear(s2.id, year, [{ date: `${year}-08-05`, count: 7 }]);
   contributions.replaceYear(s3.id, year, [{ date: `${year}-08-05`, count: 100 }]);
