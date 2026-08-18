@@ -7,3 +7,4 @@ committracker.db-wal
 dist/
 dist-electron/
 *.tsbuildinfo
+release/

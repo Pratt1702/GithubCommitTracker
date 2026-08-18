@@ -150,6 +150,7 @@ export default function Charts({ trend, stats, granularity }: Props) {
                 <YAxis
                   type="category"
                   dataKey="label"
+                  interval={0}
                   tickFormatter={(v: string) => renderName(v)}
                   tick={{ ...AXIS_TICK, fill: ink.axis }}
                   stroke={ink.grid}
