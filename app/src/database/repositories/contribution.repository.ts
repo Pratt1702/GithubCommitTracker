@@ -146,7 +146,8 @@ export class ContributionRepository {
         `SELECT student_id,
                 SUM(count) AS lifetime,
                 SUM(CASE WHEN date LIKE ? THEN count ELSE 0 END) AS yearTotal,
-                MAX(date) AS lastActive
+                MAX(date) AS lastActive,
+                MIN(date) AS firstActive
          FROM contributions WHERE student_id IN (${ph}) GROUP BY student_id`,
       )
       .all(`${year}-%`, ...ids) as Array<{
@@ -154,6 +155,7 @@ export class ContributionRepository {
       lifetime: number;
       yearTotal: number;
       lastActive: string | null;
+      firstActive: string | null;
     }>;
 
     const totalsById = new Map(totals.map((t) => [t.student_id, t]));
@@ -206,6 +208,7 @@ export class ContributionRepository {
         currentStreak: current,
         avgPerDay: Math.round((windowTotal / windowLen) * 100) / 100,
         lastActiveDate: t?.lastActive ?? null,
+        firstActiveDate: t?.firstActive ?? null,
         lastSyncedAt: s.lastSyncedAt,
         lastError: s.lastError,
       };

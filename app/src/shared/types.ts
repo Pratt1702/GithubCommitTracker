@@ -87,7 +87,10 @@ export interface StudentStats {
   /** Current streak counted backwards from the window end. */
   currentStreak: number;
   avgPerDay: number;
+  /** Most recent contributing day, or null if never contributed. */
   lastActiveDate: string | null;
+  /** Earliest contributing day ever, or null if never contributed. Used to anchor the all-time heatmap. */
+  firstActiveDate: string | null;
   lastSyncedAt: string | null;
   lastError: string | null;
 }

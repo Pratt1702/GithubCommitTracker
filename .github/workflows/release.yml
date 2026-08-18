@@ -1,0 +1,42 @@
+name: release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # Keep app/package.json version in sync with the pushed tag (vX.Y.Z -> X.Y.Z).
+      - name: Sync version from tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          node app/scripts/bump-version.cjs "$VERSION"
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add app/package.json
+          git commit -m "chore: bump version to $VERSION [skip ci]" || echo "no version change"
+
+      - name: Install
+        working-directory: app
+        run: npm ci
+
+      - name: Build + publish Windows installer
+        working-directory: app
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npm run electron:build:win -- --publish always

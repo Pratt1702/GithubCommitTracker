@@ -121,6 +121,7 @@ async function main() {
   check('best streak is lifetime (4 in 2025, not the 3-day window run)', streakRow.bestStreak, 4);
   check('current streak anchors on today/range end (08-29..08-31 = 3)', streakRow.currentStreak, 3);
   check('window total stays window-scoped (6 days, excludes 2025)', streakRow.windowTotal, 6);
+  check('firstActiveDate is the student’s earliest contributing day (2025-01-01)', streakRow.firstActiveDate, '2025-01-01');
   students.delete(sStreak.id);
 
   console.log('\n=== Scoping, search, filters ===');

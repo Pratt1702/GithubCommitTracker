@@ -45,20 +45,27 @@ export default function StudentDetail({ student, range, windowLabel, onClose, on
   const [series, setSeries] = useState<Array<{ date: string; count: number }>>([]);
   const [loading, setLoading] = useState(true);
 
+  const ink = useChartInk();
+  const tip = tooltipStyles(ink);
+
+  // In all-time view, anchor the heatmap to this student's first commit rather
+  // than the cohort-wide earliest day, so the calendar starts when they began.
+  const chartRange =
+    windowLabel === 'Total' && student.firstActiveDate
+      ? { from: student.firstActiveDate, to: range.to }
+      : range;
+
   useEffect(() => {
     let cancelled = false;
     setLoading(true);
     window.tracker.students
-      .series(student.id, range)
+      .series(student.id, chartRange)
       .then((s) => !cancelled && setSeries(s))
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
-  }, [student.id, range.from, range.to]);
-
-  const ink = useChartInk();
-  const tip = tooltipStyles(ink);
+  }, [student.id, chartRange.from, chartRange.to]);
 
   const weeks = useMemo(() => toWeeks(series), [series]);
   const maxDay = Math.max(1, ...series.map((d) => d.count));
@@ -136,7 +143,7 @@ export default function StudentDetail({ student, range, windowLabel, onClose, on
 
       <div className="panel" style={{ marginBottom: 'var(--sp-3)' }}>
         <div className="label" style={{ marginBottom: 'var(--sp-3)' }}>
-          Daily activity · {range.from} → {range.to}
+          Daily activity · {chartRange.from} → {chartRange.to}
         </div>
 
         {loading ? (
